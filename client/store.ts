@@ -12,7 +12,10 @@ const store = new Vuex.Store({
     filter: null, // Username to filter shown freets by (null = show all)
     freets: [], // All freets created in the app
     username: null, // Username of the logged in user
-    alerts: {} // global success/error messages encountered during submissions to non-visible forms
+    alerts: {}, // global success/error messages encountered during submissions to non-visible forms
+    profile: null,
+    following: false,
+    groups: []
   },
   mutations: {
     alert(state, payload) {
@@ -45,11 +48,25 @@ const store = new Vuex.Store({
        */
       state.freets = freets;
     },
+
+    updateProfile(state, profile) {
+      state.profile = profile;
+    },
+
+    updateFollowing(state, follow){
+      state.following = follow;
+    },
+
+    updateGroups(state, groups) {
+      state.groups = groups;
+    },
+
     async refreshFreets(state) {
       /**
        * Request the server for the currently available freets.
        */
-      const url = state.filter ? `/api/users/${state.filter}/freets` : '/api/freets';
+      const user = state.profile ? state.profile : state.filter;
+      const url = user ? `/api/freets?author=${user}` : '/api/freets';
       const res = await fetch(url).then(async r => r.json());
       state.freets = res;
     }

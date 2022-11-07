@@ -28,11 +28,11 @@ export default {
           this.$store.commit('updateFilter', null);
           this.value = ''; // Clear filter to show all users' freets
           this.$store.commit('refreshFreets');
+          this.$store.commit('updateReaction');
         } else {
           // Otherwise reset to previous fitler
           this.value = this.$store.state.filter;
         }
-
         this.$set(this.alerts, e, 'error');
         setTimeout(() => this.$delete(this.alerts, e), 3000);
       }

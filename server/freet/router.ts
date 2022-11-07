@@ -1,6 +1,7 @@
 import type {NextFunction, Request, Response} from 'express';
 import express from 'express';
 import FreetCollection from './collection';
+import ReactionCollection from '../reaction/collection';
 import * as userValidator from '../user/middleware';
 import * as freetValidator from '../freet/middleware';
 import * as util from './util';
@@ -36,6 +37,10 @@ router.get(
 
     const allFreets = await FreetCollection.findAll();
     const response = allFreets.map(util.constructFreetResponse);
+    for (let i = 0; i < response.length; i++){
+      const reaction = await ReactionCollection.findOne(req.session.userId, response[i]._id);
+      response[i].userReacted = (reaction)? true : false;
+    }
     res.status(200).json(response);
   },
   [
@@ -44,6 +49,10 @@ router.get(
   async (req: Request, res: Response) => {
     const authorFreets = await FreetCollection.findAllByUsername(req.query.author as string);
     const response = authorFreets.map(util.constructFreetResponse);
+    for (let i = 0; i < response.length; i++){
+      const reaction = await ReactionCollection.findOne(req.session.userId, response[i]._id);
+      response[i].userReacted = (reaction)? true : false;
+    }
     res.status(200).json(response);
   }
 );
@@ -124,6 +133,8 @@ router.patch(
   ],
   async (req: Request, res: Response) => {
     const freet = await FreetCollection.updateOne(req.params.freetId, req.body.content);
+    const reaction = await ReactionCollection.findOne(req.session.userId, freet._id);
+    freet.userReacted = (reaction)? true : false;
     res.status(200).json({
       message: 'Your freet was updated successfully.',
       freet: util.constructFreetResponse(freet)

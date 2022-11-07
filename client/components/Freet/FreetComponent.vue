@@ -6,8 +6,12 @@
     class="freet"
   >
     <header>
-      <h3 class="author">
-        @{{ freet.author }}
+      <h3 class = "author">
+        <router-link to = "/profile">
+          <div @click = "setProfile">
+            @{{ freet.author }}
+          </div>
+        </router-link>
       </h3>
       <div
         v-if="$store.state.username === freet.author"
@@ -52,6 +56,19 @@
       Posted at {{ freet.dateModified }}
       <i v-if="freet.edited">(edited)</i>
     </p>
+    <div v-if = "$store.state.username && !freet.userReacted" class="actions">
+      <button @click="heartReact">
+        ❤️
+      </button>
+      <button @click="brokenHeartReact">
+        💔
+      </button>
+    </div>
+    <div v-if = "$store.state.username && freet.userReacted" class="actions">
+      <button @click="removeReact">
+        remove reaction
+      </button>
+    </div>
     <section class="alerts">
       <article
         v-for="(status, alert, index) in alerts"
@@ -72,12 +89,17 @@ export default {
     freet: {
       type: Object,
       required: true
+    },
+    reacted: {
+      type: Boolean,
+      required: true
     }
   },
   data() {
     return {
       editing: false, // Whether or not this freet is in edit mode
       draft: this.freet.content, // Potentially-new content for this freet
+      reacted: this.freet.reacted,
       alerts: {} // Displays success/error messages encountered during freet modification
     };
   },
@@ -120,11 +142,10 @@ export default {
         setTimeout(() => this.$delete(this.alerts, error), 3000);
         return;
       }
-
       const params = {
         method: 'PATCH',
         message: 'Successfully edited freet!',
-        body: JSON.stringify({content: this.draft}),
+        body: JSON.stringify({content: JSON.stringify(this.freet)}), //JSON.stringify({content: this.draft}),
         callback: () => {
           this.$set(this.alerts, params.message, 'success');
           setTimeout(() => this.$delete(this.alerts, params.message), 3000);
@@ -132,6 +153,36 @@ export default {
       };
       this.request(params);
     },
+
+    async setProfile() {
+      this.$store.commit('updateProfile', this.freet.author);
+      const r = await fetch(`/api/freets?author=${this.freet.author}`);
+      const res = await r.json();
+      this.$store.commit('updateFreets', res);
+
+      const r1 = await fetch(`/api/follow/${this.freet.author}`);
+      const res1 = await r1.json();
+      this.$store.commit('updateFollowing', (res1)? true : false);
+    },
+
+    async heartReact() {
+      const params = {method: "POST", headers: {'Content-Type': 'application/json'}};
+      const r = await fetch(`/api/reaction/${this.freet._id}/heart`, params);
+      this.$store.commit('refreshFreets');
+    },
+
+    async brokenHeartReact(){
+      const params = {method: "POST", headers: {'Content-Type': 'application/json'}};
+      const r = await fetch(`/api/reaction/${this.freet._id}/broken-heart`, params);
+      this.$store.commit('refreshFreets');
+    },
+
+    async removeReact() {
+      const params = {method: "DELETE", headers: {'Content-Type': 'application/json'}};
+      const r = await fetch(`/api/reaction/${this.freet._id}`, params);
+      this.$store.commit('refreshFreets');
+    },
+
     async request(params) {
       /**
        * Submits a request to the freet's endpoint

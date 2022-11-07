@@ -87,6 +87,10 @@ export default {
 
       try {
         const r = await fetch(this.url, options);
+        const r1 = await fetch(`/api/group/${this.$store.state.username}`);
+        const res1 = await r1.json();
+        this.$store.commit('updateGroups', res1);
+        this.$store.commit('updateReaction');
         if (!r.ok) {
           // If response is not okay, we throw an error and enter the catch block
           const res = await r.json();

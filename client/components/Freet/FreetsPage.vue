@@ -67,6 +67,7 @@ export default {
   name: 'FreetPage',
   components: {FreetComponent, GetFreetsForm, CreateFreetForm},
   mounted() {
+    this.$store.commit('updateProfile', null);
     this.$refs.getFreetsForm.submit();
   }
 };

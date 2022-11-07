@@ -1,3 +1,4 @@
+import type {Types, PopulatedDoc, Document} from 'mongoose';
 import type {HydratedDocument} from 'mongoose';
 import moment from 'moment';
 import type {Freet, PopulatedFreet} from '../freet/model';
@@ -9,6 +10,8 @@ type FreetResponse = {
   dateCreated: string;
   content: string;
   dateModified: string;
+  reactions?: Array<Types.ObjectId>;
+  userReacted?: Boolean
 };
 
 /**
